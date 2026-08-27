@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dokumentacja — Zenit Linux</title>
+<meta name="description" content="Zacznij pracę z Zenit Linux: instalacja, zpm, budowanie własnego obrazu przez zlb, publikowanie pakietów przez zpk.">
+<link rel="icon" href="../assets/icon-no-bg.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+
+<header class="site-header" data-scrolled="false">
+  <div class="wrap">
+    <a href="../index.html" class="wordmark">ZENIT<small>LINUX</small></a>
+    <nav class="nav" data-open="false">
+      <button class="nav__toggle" aria-label="Otwórz menu" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <ul class="nav__links">
+        <li><a href="../index.html">Start</a></li>
+        <li><a href="download.html">Pobierz</a></li>
+        <li><a href="packages.html">Pakiety</a></li>
+        <li><a href="builder.html">Builder</a></li>
+        <li><a href="docs.html" aria-current="page">Dokumentacja</a></li>
+        <li><a href="about.html">O projekcie</a></li>
+      </ul>
+      <a class="btn btn--primary btn--sm" href="download.html">Pobierz ISO</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero wrap">
+    <span class="eyebrow">dokumentacja</span>
+    <h1>Zacznij pracę z Zenit Linux</h1>
+    <p class="lede">Od pierwszego rozruchu do zbudowania własnego obrazu — najkrótsza droga przez cały ekosystem.</p>
+  </section>
+
+  <section class="section wrap">
+    <div class="docs-layout">
+      <nav class="docs-nav" aria-label="Spis treści dokumentacji">
+        <span class="eyebrow">na tej stronie</span>
+        <ul>
+          <li><a href="#instalacja" class="is-active">Instalacja</a></li>
+          <li><a href="#zpm-podstawy">Podstawy zpm</a></li>
+          <li><a href="#package-list">package.list</a></li>
+          <li><a href="#budowanie">Budowanie obrazu</a></li>
+          <li><a href="#publikacja">Publikacja pakietu</a></li>
+          <li><a href="#diagnostyka">Diagnostyka</a></li>
+        </ul>
+      </nav>
+
+      <div class="prose">
+        <h2 id="instalacja">Instalacja</h2>
+        <p>Pobierz <a href="download.html">obraz ISO</a> i nagraj go na nośnik rozruchowy:</p>
+        <pre><code>sha256sum -c zenit-linux-0.3.0-x86_64.iso.sha256
+dd if=zenit-linux-0.3.0-x86_64.iso of=/dev/sdX bs=4M status=progress conv=fsync</code></pre>
+        <p>Uruchom z nośnika, wybierz środowisko graficzne (jeśli obraz je oferuje — patrz <code>installer/config.hcl</code>) i przejdź przez kreator instalatora.</p>
+
+        <h2 id="zpm-podstawy">Podstawy zpm</h2>
+        <p>Po instalacji <code>zpm</code> jest już dostępny. Wyszukuje pakiety we wszystkich skonfigurowanych backendach naraz:</p>
+        <pre><code>zpm install neovim
+zpm install neovim -&gt; apt      # wymuś konkretny backend
+zpm list --all                   # widok ujednolicony: baza + pokwitowania
+zpm doctor --fix                 # diagnostyka + automatyczne naprawy</code></pre>
+        <p>Ekosystem <code>own</code> to alternatywa dla <code>curl … | sh</code> — narzędzia Zenit (w tym samo <code>zpm</code>) są instalowane z weryfikacją podpisu GPG, nie ślepym zaufaniem do skryptu z internetu.</p>
+
+        <h2 id="package-list">package.list</h2>
+        <p>Moduły <code>zlb</code> opisują pakiety w formacie HCL, jeden blok na pakiet:</p>
+        <pre><code>package "kernel" {
+  backend     = "own"
+  variant     = "stable"
+  description = "domyślne jądro Linux"
+}
+
+package "git" {
+  backend = "apt"
+}</code></pre>
+        <p>Zobacz <a href="packages.html#package-list">pełny opis pól</a> na stronie pakietów — w tym instalację ze specyficznego brancha albo z innej dystrybucji.</p>
+
+        <h2 id="budowanie">Budowanie własnego obrazu</h2>
+        <ol>
+          <li>Sklonuj <a href="https://github.com/Zenit-Linux/zenit" target="_blank" rel="noopener">repozytorium zenit</a> (albo zrób widelec).</li>
+          <li>Dostosuj <code>distro.hcl</code> — nazwę, wersję, listę architektur.</li>
+          <li>Edytuj <code>modules/core/package.list</code> według potrzeb.</li>
+          <li>Zwaliduj manifest: <code>zlb manifest validate</code>.</li>
+          <li>Zbuduj: <code>zlb build all --arch x86_64</code>.</li>
+        </ol>
+        <p>Wynik ląduje w <code>out/</code> — ISO, obraz OCI i sumy sha256, dokładnie jak w oficjalnym CI. Szczegóły na stronie <a href="builder.html">buildera</a>.</p>
+
+        <h2 id="publikacja">Publikacja własnego pakietu</h2>
+        <pre><code>zpk init
+$EDITOR zpk.build recipe.janet
+zpk build --release --verbose
+zpk schedule-release --branch=testing</code></pre>
+        <p>Ostatnie polecenie otwiera pull request do <a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a> — stamtąd <code>zpm</code> na każdym systemie zobaczy Twój pakiet po najbliższym <code>zpm refresh</code>.</p>
+
+        <h2 id="diagnostyka">Diagnostyka</h2>
+        <p>Coś nie zgadza się między tym, co <code>zpm</code> myśli, że zainstalowało, a stanem faktycznym na dysku:</p>
+        <pre><code>zpm doctor          # diagnoza: baza SQLite vs pokwitowania vs stan realny
+zpm doctor --fix     # napraw to, co bezpieczne (nigdy nie instaluje/usuwa pakietów)</code></pre>
+        <blockquote>Pełna referencja poleceń: strona podręcznika <code>man zpm</code> w repozytorium, albo <code>zpm --help</code>.</blockquote>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-col footer-brand">
+      <a href="../index.html" class="wordmark">ZENIT<small>LINUX</small></a>
+      <p>Dystrybucja Linuksa budowana własnymi narzędziami. Wolne oprogramowanie, GPL-3.0.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Projekt</h4>
+      <ul>
+        <li><a href="about.html">O projekcie</a></li>
+        <li><a href="download.html">Pobierz</a></li>
+        <li><a href="docs.html">Dokumentacja</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Narzędzia</h4>
+      <ul>
+        <li><a href="builder.html">zlb</a></li>
+        <li><a href="packages.html">zpm</a></li>
+        <li><a href="packages.html#zpk">zpk</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Społeczność</h4>
+      <ul>
+        <li><a href="https://github.com/Zenit-Linux" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a></li>
+        <li><a href="https://github.com/Zenit-Linux/zenit/issues" target="_blank" rel="noopener">Zgłoś błąd</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom wrap" style="padding:0; grid-column: 1 / -1;">
+      <span>© Zenit Linux Developers.</span>
+      <span>Zbudowane w Zenicie, dla Zenitu.</span>
+    </div>
+  </div>
+</footer>
+
+<script type="text/javascript" src="../scripts/nav.ja"></script>
+<script type="text/javascript" src="../scripts/copy.ja"></script>
+<script type="text/javascript">
+  // Podświetlenie aktywnej pozycji w docs-nav podczas scrollowania.
+  (function () {
+    var links = document.querySelectorAll(".docs-nav a");
+    var sections = Array.prototype.map.call(links, function (a) {
+      return document.querySelector(a.getAttribute("href"));
+    });
+    if (!links.length || !("IntersectionObserver" in window)) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var idx = sections.indexOf(entry.target);
+        links.forEach(function (l) { l.classList.remove("is-active"); });
+        if (idx > -1) links[idx].classList.add("is-active");
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    sections.forEach(function (s) { if (s) io.observe(s); });
+  })();
+</script>
+</body>
+</html>
