@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>zlb — Zenit Linux Builder</title>
+<meta name="description" content="zlb buduje obrazy ISO i OCI Zenit Linux z modułów HCL — w tym obraz zawierający zlb samo w sobie.">
+<link rel="icon" href="../assets/icon-no-bg.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+
+<header class="site-header" data-scrolled="false">
+  <div class="wrap">
+    <a href="../index.html" class="wordmark">ZENIT<small>LINUX</small></a>
+    <nav class="nav" data-open="false">
+      <button class="nav__toggle" aria-label="Otwórz menu" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <ul class="nav__links">
+        <li><a href="../index.html">Start</a></li>
+        <li><a href="download.html">Pobierz</a></li>
+        <li><a href="packages.html">Pakiety</a></li>
+        <li><a href="builder.html" aria-current="page">Builder</a></li>
+        <li><a href="docs.html">Dokumentacja</a></li>
+        <li><a href="about.html">O projekcie</a></li>
+      </ul>
+      <a class="btn btn--primary btn--sm" href="download.html">Pobierz ISO</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="page-hero wrap">
+    <span class="eyebrow">stage3 · obraz systemu</span>
+    <h1>zlb — Zenit Linux Builder</h1>
+    <p class="lede">Jeden manifest (<code>distro.hcl</code>), moduły pakietów w HCL i dwa polecenia — <code>zlb</code> składa bootowalne ISO albo obraz kontenerowy OCI. Ten sam builder, który wyprodukował obraz na Twoim pendrive.</p>
+  </section>
+
+  <section class="section wrap">
+    <div class="install-box" data-reveal>
+      <code id="zlb-cmd">zlb build all --arch x86_64</code>
+      <button class="copy-btn" data-copy-target="#zlb-cmd"><span class="copy-btn__label">Kopiuj</span></button>
+    </div>
+  </section>
+
+  <section class="section--tight wrap">
+    <div class="section-head">
+      <h2>Struktura projektu</h2>
+      <p class="lede">Dokładnie to, co znajdziesz w repozytorium <code>zenit</code> — żadnego ukrytego kroku.</p>
+    </div>
+    <div class="prose" data-reveal>
+      <pre><code>zenit/
+  distro.hcl                 # manifest główny: nazwa, wersja, architektury
+  devcontainer.hcl            # alternatywny manifest -- headless OCI
+  modules/
+    core/
+      package.list             # pakiety systemu (format HCL)
+      scripts/setup.janet       # hooki pre/post-install
+    devcontainer/
+      package.list             # osobny zestaw dla obrazu dev
+  installer/
+    config.hcl                 # wybór środowisk graficznych, branding
+  overlays/
+    branding/                  # ikony, banery instalatora
+    system/, home/              # pliki kopiowane wprost do rootfs
+  keys/
+    default.hcl                 # zaufane klucze GPG ekosystemu own</code></pre>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>Kilka manifestów, jeden builder</h2>
+      <p class="lede">Flaga <code>--manifest</code> pozwala trzymać alternatywne profile budowania w tym samym repo.</p>
+    </div>
+    <div class="grid-3" data-reveal>
+      <article class="tool-card">
+        <div class="tool-card__icon">ISO</div>
+        <h3>Pulpit</h3>
+        <p>Pełny system z instalatorem graficznym, jądrem i bootloaderem.</p>
+        <div class="tool-card__cmd">$ zlb build iso --arch x86_64</div>
+      </article>
+      <article class="tool-card">
+        <div class="tool-card__icon">OCI</div>
+        <h3>Devcontainer</h3>
+        <p>Headless obraz deweloperski — bez GUI, bez jądra, tylko narzędzia.</p>
+        <div class="tool-card__cmd">$ zlb build oci --manifest devcontainer.hcl</div>
+      </article>
+      <article class="tool-card">
+        <div class="tool-card__icon">✓</div>
+        <h3>Walidacja</h3>
+        <p>Sprawdza manifest i wszystkie moduły bez uruchamiania builda.</p>
+        <div class="tool-card__cmd">$ zlb manifest validate</div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="cta-band" data-reveal>
+      <span class="eyebrow">rekurencja, nie metafora</span>
+      <h2 class="mt-2">Ten obraz zawiera zlb</h2>
+      <p class="lede">Każde wydanie Zenit Linux ma w sobie <code>zlb</code>, <code>zpm</code> i <code>zpk</code> jako zwykłe pakiety <code>own</code>. Widelec repozytorium <code>zenit</code>, zmiana <code>distro.hcl</code> i <code>zlb build all</code> wystarczą, żeby zbudować własny wariant — od zera, tymi samymi narzędziami.</p>
+      <div class="btn-row">
+        <a class="btn btn--primary" href="https://github.com/Zenit-Linux/zenit" target="_blank" rel="noopener">Sklonuj repo zenit</a>
+        <a class="btn btn--ghost" href="docs.html">Instrukcja krok po kroku</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-col footer-brand">
+      <a href="../index.html" class="wordmark">ZENIT<small>LINUX</small></a>
+      <p>Dystrybucja Linuksa budowana własnymi narzędziami. Wolne oprogramowanie, GPL-3.0.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Projekt</h4>
+      <ul>
+        <li><a href="about.html">O projekcie</a></li>
+        <li><a href="download.html">Pobierz</a></li>
+        <li><a href="docs.html">Dokumentacja</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Narzędzia</h4>
+      <ul>
+        <li><a href="builder.html">zlb</a></li>
+        <li><a href="packages.html">zpm</a></li>
+        <li><a href="packages.html#zpk">zpk</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Społeczność</h4>
+      <ul>
+        <li><a href="https://github.com/Zenit-Linux" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a></li>
+        <li><a href="https://github.com/Zenit-Linux/zenit/issues" target="_blank" rel="noopener">Zgłoś błąd</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom wrap" style="padding:0; grid-column: 1 / -1;">
+      <span>© Zenit Linux Developers.</span>
+      <span>Zbudowane w Zenicie, dla Zenitu.</span>
+    </div>
+  </div>
+</footer>
+
+<script type="text/javascript" src="../scripts/nav.js"></script>
+<script type="text/javascript" src="../scripts/copy.js"></script>
+</body>
+</html>
