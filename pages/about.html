@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O projekcie — Zenit Linux</title>
+<meta name="description" content="Zenit Linux: filozofia samohostowania - system budowany, pakowany i instalowany własnymi narzędziami, bez zewnętrznych zależności poza jednorazowym bootstrapem.">
+<link rel="icon" href="../assets/icon-no-bg.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
 
+<header class="site-header" data-scrolled="false">
+  <div class="wrap">
+    <a href="../index.html" class="wordmark">ZENIT<small>LINUX</small></a>
+    <nav class="nav" data-open="false">
+      <button class="nav__toggle" aria-label="Otwórz menu" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <ul class="nav__links">
+        <li><a href="../index.html">Start</a></li>
+        <li><a href="download.html">Pobierz</a></li>
+        <li><a href="packages.html">Pakiety</a></li>
+        <li><a href="builder.html">Builder</a></li>
+        <li><a href="docs.html">Dokumentacja</a></li>
+        <li><a href="about.html" aria-current="page">O projekcie</a></li>
+      </ul>
+      <a class="btn btn--primary btn--sm" href="download.html">Pobierz ISO</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero wrap">
+    <span class="eyebrow">filozofia</span>
+    <h1>Dlaczego samohostowanie</h1>
+    <p class="lede">Większość dystrybucji jest budowana przez coś innego niż to, co dostarcza — skrypty powłoki, systemy CI trzecich stron, ręczne kroki wykonywane przez opiekunów. Zenit robi to inaczej: narzędzia, które budują system, są częścią systemu.</p>
+  </section>
+
+  <section class="section wrap">
+    <div class="prose" data-reveal>
+      <h2>Jedna zależność zewnętrzna, i to tylko na start</h2>
+      <p>Świeży runner CI nie ma jeszcze niczego z ekosystemu Zenit. Musi skądś wziąć pierwszą binarkę <code>zpm</code> — to jedyny moment (<code>stage0</code>), w którym proces budowania sięga poza siebie, pobierając ją z <a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a>. Od tego punktu <code>zpm</code> instaluje resztę ekosystemu — łącznie z samym sobą, żeby przyszłe buildy nie musiały nawet tego jednego kroku.</p>
+
+      <h2>Ten sam menedżer pakietów, ten sam builder</h2>
+      <p>Obraz, który pobierasz ze strony <a href="download.html">pobierania</a>, zawiera w środku <code>zpm</code>, <code>zlb</code> i <code>zpk</code> jako zwykłe, zainstalowane pakiety. Uruchomienie <code>zlb build all</code> wewnątrz zainstalowanego Zenita produkuje kolejny obraz Zenita — z tymi samymi narzędziami w środku. To nie jest metafora marketingowa; to dosłowny, sprawdzalny fakt o zawartości obrazu.</p>
+
+      <h2>Dlaczego to ma znaczenie</h2>
+      <ul>
+        <li><strong>Spójność.</strong> Nie ma osobnego "trybu deweloperskiego" builda i "trybu produkcyjnego" — to ten sam <code>zlb</code>, ten sam manifest.</li>
+        <li><strong>Przejrzystość.</strong> Cały proces budowania da się odtworzyć lokalnie: <code>git clone</code>, <code>zlb build all</code>, gotowe.</li>
+        <li><strong>Rozszerzalność.</strong> Widelec repozytorium i zmiana <code>distro.hcl</code> wystarczą, żeby powstała nowa dystrybucja oparta o tę samą bazę — bez utrzymywania osobnego forka narzędzi.</li>
+      </ul>
+
+      <h2>Co jeszcze nie jest samohostowane</h2>
+      <p>Uczciwie: kompilator Nim, jądro Linux i podstawowe narzędzia GNU/toolchain wciąż pochodzą spoza projektu — samohostowanie dotyczy warstwy <em>dystrybucji</em> (budowanie obrazu, zarządzanie pakietami, publikacja), nie całego stosu od krzemu po interfejs użytkownika. To świadoma granica, nie przeoczenie.</p>
+
+      <h2>Licencja i społeczność</h2>
+      <p>Cały ekosystem — <code>zpm</code>, <code>zlb</code>, <code>zpk</code> i sam <code>zenit</code> — jest wolnym oprogramowaniem na licencji GPL-3.0. Kod źródłowy, issue trackery i dyskusje mieszkają na <a href="https://github.com/Zenit-Linux" target="_blank" rel="noopener">GitHubie organizacji Zenit-Linux</a>.</p>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="cta-band" data-reveal>
+      <span class="eyebrow">zobacz to sam</span>
+      <h2 class="mt-2">Prześledź cały łańcuch budowania</h2>
+      <p class="lede">Od <code>distro.hcl</code>, przez <code>package.list</code>, po gotowe ISO — każdy krok jest w publicznym repozytorium.</p>
+      <div class="btn-row">
+        <a class="btn btn--primary" href="builder.html">Jak działa zlb</a>
+        <a class="btn btn--ghost" href="https://github.com/Zenit-Linux/zenit" target="_blank" rel="noopener">Repozytorium zenit</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-col footer-brand">
+      <a href="../index.html" class="wordmark">ZENIT<small>LINUX</small></a>
+      <p>Dystrybucja Linuksa budowana własnymi narzędziami. Wolne oprogramowanie, GPL-3.0.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Projekt</h4>
+      <ul>
+        <li><a href="about.html">O projekcie</a></li>
+        <li><a href="download.html">Pobierz</a></li>
+        <li><a href="docs.html">Dokumentacja</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Narzędzia</h4>
+      <ul>
+        <li><a href="builder.html">zlb</a></li>
+        <li><a href="packages.html">zpm</a></li>
+        <li><a href="packages.html#zpk">zpk</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Społeczność</h4>
+      <ul>
+        <li><a href="https://github.com/Zenit-Linux" target="_blank" rel="noopener">GitHub</a></li>
+        <li><a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a></li>
+        <li><a href="https://github.com/Zenit-Linux/zenit/issues" target="_blank" rel="noopener">Zgłoś błąd</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom wrap" style="padding:0; grid-column: 1 / -1;">
+      <span>© Zenit Linux Developers.</span>
+      <span>Zbudowane w Zenicie, dla Zenitu.</span>
+    </div>
+  </div>
+</footer>
+
+<script type="text/javascript" src="../scripts/nav.ja"></script>
+<script type="text/javascript" src="../scripts/copy.ja"></script>
+</body>
+</html>
