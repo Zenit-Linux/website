@@ -3,13 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>zpm & zpk — Zenit Linux</title>
-<meta name="description" content="zpm: menedżer pakietów Zenit Linux — apt/dnf/pacman/cargo/npm/flatpak i własny ekosystem own. zpk: builder pakietów .zpk.">
+<title>Pakiety — Zenit Linux</title>
+<meta name="description" content="Przeglądaj i wyszukuj pakiety ekosystemu own — narzędzi Zenit Linux dostępnych przez zpm, na żywo z own-repository.json.">
 <link rel="icon" href="https://raw.githubusercontent.com/Zenit-Linux/zenit/main/overlays/branding/icon-no-bg.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../styles/main.css">
+<style>
+  /* Style lokalne dla przeglądarki pakietów -- reszta strony korzysta
+     wyłącznie z main.css, ale ten widok (siatka kart + pasek
+     wyszukiwania + filtr typu) jest specyficzny dla tej strony i nie ma
+     odpowiednika gdzie indziej w serwisie, więc nie warto go tam dodawać. */
+  .pkg-toolbar {
+    display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;
+    margin-bottom: var(--space-4);
+  }
+  .pkg-search {
+    flex: 1 1 320px; min-width: 220px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-m); color: var(--text);
+    padding: 0.75em 1em; font-size: var(--step-0); font-family: inherit;
+  }
+  .pkg-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pkg-filters { display: flex; gap: 0.4em; flex-wrap: wrap; }
+  .pkg-filter {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 999px; padding: 0.45em 1em; font-size: var(--step--1);
+    font-family: var(--font-mono); cursor: pointer; transition: border-color .15s, color .15s;
+  }
+  .pkg-filter[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .pkg-status { color: var(--text-faint); font-size: var(--step--1); margin-bottom: var(--space-3); min-height: 1.4em; }
+  .pkg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
+  .pkg-card {
+    background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius-m);
+    padding: var(--space-3); display: flex; flex-direction: column; gap: 0.5em;
+  }
+  .pkg-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5em; }
+  .pkg-card__name { font-family: var(--font-mono); font-size: var(--step-1); font-weight: 600; color: var(--text); word-break: break-word; }
+  .pkg-card__type {
+    font-family: var(--font-mono); font-size: var(--step--1); color: var(--accent-2);
+    border: 1px solid var(--border); border-radius: 999px; padding: 0.15em 0.65em; white-space: nowrap;
+  }
+  .pkg-card__info { color: var(--text-dim); font-size: var(--step--1); flex: 1; }
+  .pkg-card__meta { display: flex; flex-wrap: wrap; gap: 0.4em; font-size: var(--step--1); color: var(--text-faint); font-family: var(--font-mono); }
+  .pkg-card__meta span { border: 1px solid var(--border-soft); border-radius: var(--radius-s); padding: 0.1em 0.5em; }
+  .pkg-card__cmd {
+    font-family: var(--font-mono); font-size: var(--step--1); background: var(--surface-2);
+    border-radius: var(--radius-s); padding: 0.5em 0.75em; color: var(--accent-soft);
+    overflow-x: auto; white-space: nowrap;
+  }
+  .pkg-empty { padding: var(--space-5) var(--space-3); text-align: center; color: var(--text-faint); }
+</style>
 </head>
 <body>
 
@@ -38,63 +83,29 @@
 <main>
 
   <section class="page-hero wrap">
-    <span class="eyebrow">stage1 · własny ekosystem</span>
-    <h1>zpm — jeden front, wiele źródeł</h1>
-    <p class="lede">Zamiast wymyślać kolejny format pakietów, <code>zpm</code> orkiestruje te, które już znasz — i dokłada własny ekosystem <code>own</code> dla narzędzi, których w nich nie ma.</p>
-  </section>
-
-  <section class="section wrap">
-    <div class="grid-3" data-reveal>
-      <article class="tool-card">
-        <div class="tool-card__icon">9</div>
-        <h3>Backendów systemowych</h3>
-        <p>apt, dnf, pacman, zypper, brew, flatpak, snap, cargo, npm, pip — <code>zpm</code> wybiera właściwy automatycznie albo na żądanie (<code>pakiet -&gt; backend</code>).</p>
-      </article>
-      <article class="tool-card">
-        <div class="tool-card__icon">own</div>
-        <h3>Ekosystem Zenit</h3>
-        <p>Narzędzia budowane ze źródeł (git + <code>build.janet</code>) albo pobierane jako gotowe binarki — z branchami: stable, rolling, semi-rolling, testing.</p>
-      </article>
-      <article class="tool-card">
-        <div class="tool-card__icon">.zpk</div>
-        <h3>Format natywny</h3>
-        <p>Podpisany manifest z sumą sha256 archiwum i każdego pliku w środku — <code>zpm install pakiet.zpk</code> weryfikuje integralność przed rozpakowaniem.</p>
-      </article>
-    </div>
+    <span class="eyebrow">stage1 · ekosystem own</span>
+    <h1>Przeglądaj pakiety</h1>
+    <p class="lede">Wszystkie narzędzia z <code>own-repository.json</code>, na żywo z GitHuba — to samo źródło, z którego korzysta <code>zpm</code> na Twoim systemie. Szukasz dokumentacji formatu <code>package.list</code> albo <code>zpk</code>? Zobacz <a href="docs.html#package-list">dokumentację</a>.</p>
   </section>
 
   <section class="section--tight wrap">
-    <div class="section-head">
-      <h2>Składnia package.list</h2>
-      <p class="lede">Ta sama, którą <code>zlb</code> czyta z <code>modules/*/package.list</code> — format HCL, jeden blok na pakiet.</p>
+    <div class="pkg-toolbar">
+      <input type="search" class="pkg-search" id="pkg-search" placeholder="Szukaj pakietu, np. „kernel”, „zesh”, „zdb”…" autocomplete="off">
+      <div class="pkg-filters" id="pkg-filters" role="group" aria-label="Filtruj po typie">
+        <button type="button" class="pkg-filter" data-filter="all" aria-pressed="true">wszystkie</button>
+        <button type="button" class="pkg-filter" data-filter="otkBinary" aria-pressed="false">binarki</button>
+        <button type="button" class="pkg-filter" data-filter="otkGit" aria-pressed="false">ze źródeł (git)</button>
+      </div>
     </div>
-    <div class="prose" data-reveal>
-      <pre><code>package "kernel" {
-  backend     = "own"
-  variant     = "testing"
-  description = "jądro z brancha testing zamiast domyślnego stable"
-}
-
-package "git" {
-  backend = "apt"
-  variant = "debian.testing"   # instalacja cross-distro, izolowana w kontenerze
-}
-
-package "curl" {}               # backend/wariant domyślny z distro.hcl</code></pre>
-      <p class="mt-3">
-        Wariant (<code>variant</code>) zmienia znaczenie w zależności od backendu: dla <code>own</code> to
-        <strong>branch</strong> narzędzia w <a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a>,
-        dla reszty backendów — <strong>docelowa dystrybucja</strong>. Instalacja cross-distro nigdy nie dotyka
-        natywnej bazy pakietów hosta: <code>zpm</code> uruchamia ją w izolowanym, efemerycznym kontenerze i scala
-        tylko wynikowy diff.
-      </p>
-    </div>
+    <p class="pkg-status" id="pkg-status" role="status" aria-live="polite">Wczytywanie own-repository.json…</p>
+    <div class="pkg-grid" id="pkg-grid"></div>
+    <div class="pkg-empty" id="pkg-empty" hidden>Brak pakietów pasujących do wyszukiwania.</div>
   </section>
 
-  <section class="section wrap" id="zpk">
+  <section class="section wrap">
     <div class="section-head">
-      <h2>zpk — builder pakietów .zpk</h2>
-      <p class="lede">Od pomysłu do pull requesta w rejestrze pakietów, trzema poleceniami.</p>
+      <h2>Nie widzisz swojego pakietu?</h2>
+      <p class="lede">Ekosystem <code>own</code> jest otwarty — dowolna osoba może zgłosić nowe narzędzie.</p>
     </div>
     <div class="pipeline" data-reveal style="grid-template-columns: repeat(3, 1fr);">
       <div class="stage-card">
@@ -110,10 +121,10 @@ package "curl" {}               # backend/wariant domyślny z distro.hcl</code><
       <div class="stage-card">
         <span class="stage-card__tag">03</span>
         <h3>zpk schedule-release</h3>
-        <p>Otwiera pull request do <code>own-repository</code> z nowym albo zaktualizowanym wpisem.</p>
+        <p>Otwiera pull request do <a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a> z nowym albo zaktualizowanym wpisem.</p>
       </div>
     </div>
-    <p class="lede mt-4">Wolisz przejść przez to pytanie-po-pytaniu? <code>zpk tutorial-release</code> to interaktywny kreator z wyborem języka (<code>ZPK_LANG=pl</code>).</p>
+    <p class="lede mt-4">Pełny opis formatu <code>package.list</code> i pipeline'u <code>zpk</code> jest teraz w <a href="docs.html#publikacja">dokumentacji</a>.</p>
   </section>
 
 </main>
@@ -136,8 +147,8 @@ package "curl" {}               # backend/wariant domyślny z distro.hcl</code><
       <h4>Narzędzia</h4>
       <ul>
         <li><a href="builder.html">zlb</a></li>
-        <li><a href="packages.html">zpm</a></li>
-        <li><a href="packages.html#zpk">zpk</a></li>
+        <li><a href="docs.html#zpm-podstawy">zpm</a></li>
+        <li><a href="docs.html#publikacja">zpk</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -157,5 +168,6 @@ package "curl" {}               # backend/wariant domyślny z distro.hcl</code><
 
 <script type="text/javascript" src="../scripts/nav.js"></script>
 <script type="text/javascript" src="../scripts/copy.js"></script>
+<script type="text/javascript" src="../scripts/packages.js"></script>
 </body>
 </html>
