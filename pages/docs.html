@@ -50,6 +50,8 @@
           <li><a href="#instalacja" class="is-active">Instalacja</a></li>
           <li><a href="#zpm-podstawy">Podstawy zpm</a></li>
           <li><a href="#package-list">package.list</a></li>
+          <li><a href="#toolset">Toolset: GNU czy Zenit</a></li>
+          <li><a href="#installer-config">Instalator: DE i języki</a></li>
           <li><a href="#budowanie">Budowanie obrazu</a></li>
           <li><a href="#publikacja">Publikacja pakietu</a></li>
           <li><a href="#diagnostyka">Diagnostyka</a></li>
@@ -72,17 +74,49 @@ zpm doctor --fix                 # diagnostyka + automatyczne naprawy</code></pr
         <p>Ekosystem <code>own</code> to alternatywa dla <code>curl … | sh</code> — narzędzia Zenit (w tym samo <code>zpm</code>) są instalowane z weryfikacją podpisu GPG, nie ślepym zaufaniem do skryptu z internetu.</p>
 
         <h2 id="package-list">package.list</h2>
-        <p>Moduły <code>zlb</code> opisują pakiety w formacie HCL, jeden blok na pakiet:</p>
+        <p>Moduły <code>zlb</code> opisują pakiety w formacie HCL, jeden blok na pakiet — to ta sama składnia, którą <code>zlb</code> czyta z <code>modules/*/package.list</code>:</p>
         <pre><code>package "kernel" {
   backend     = "own"
-  variant     = "stable"
-  description = "domyślne jądro Linux"
+  variant     = "testing"
+  description = "jądro z brancha testing zamiast domyślnego stable"
 }
 
 package "git" {
   backend = "apt"
+  variant = "debian.testing"   # instalacja cross-distro, izolowana w kontenerze
+}
+
+package "curl" {}               # backend/wariant domyślny z distro.hcl</code></pre>
+        <p>Wariant (<code>variant</code>) zmienia znaczenie w zależności od backendu: dla <code>own</code> to <strong>branch</strong> narzędzia w <a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a>, dla reszty backendów — <strong>docelowa dystrybucja</strong>. Instalacja cross-distro nigdy nie dotyka natywnej bazy pakietów hosta: <code>zpm</code> uruchamia ją w izolowanym, efemerycznym kontenerze i scala tylko wynikowy diff.</p>
+        <p>Szukasz konkretnego pakietu z ekosystemu <code>own</code>? Zobacz <a href="packages.html">przeglądarkę pakietów</a>.</p>
+
+        <h2 id="toolset">Toolset: GNU czy Zenit</h2>
+        <p><code>distro.hcl</code> pozwala wybrać, jakie narzędzia bazowe (odpowiedniki <code>coreutils</code>/<code>util-linux</code>/<code>findutils</code>) trafiają do obrazu — klasyczny GNU, albo własny, minimalny zestaw Zenit (36 narzędzi z <code>zenit-base/tools/</code>, każde jako osobny pakiet <code>own</code>):</p>
+        <pre><code>toolset {
+  profile        = "zenit"   # albo "gnu" (domyślne)
+  allow_override = true       # czy --toolset= na builda może to nadpisać
 }</code></pre>
-        <p>Zobacz <a href="packages.html#package-list">pełny opis pól</a> na stronie pakietów — w tym instalację ze specyficznego brancha albo z innej dystrybucji.</p>
+        <p>Pojedynczy build można nadpisać bez zmiany <code>distro.hcl</code>:</p>
+        <pre><code>zlb build rootfs --toolset=zenit</code></pre>
+        <p><code>zlb</code> dokłada odpowiedni moduł (<code>modules/toolset-gnu/</code> albo <code>modules/toolset-zenit/</code>) do listy pakietów automatycznie — nie trzeba go wymieniać ręcznie w <code>modules.include</code>.</p>
+
+        <h2 id="installer-config">Instalator: środowiska graficzne i języki</h2>
+        <p>Twórca dystrybucji opartej o Zenit steruje kreatorem instalacji przez <code>installer/config.hcl</code> w korzeniu repozytorium:</p>
+        <pre><code>installer {
+  desktop_selector = true
+  desktops         = ["gnome", "plasma", "none"]
+  default_desktop  = "gnome"
+
+  locales         = ["pl_PL.UTF-8", "en_US.UTF-8", "de_DE.UTF-8"]
+  default_locale  = "pl_PL.UTF-8"
+}
+
+branding {
+  icon   = "icon-no-bg.png"   # względem overlays/branding/
+  banner = "banner.png"
+}</code></pre>
+        <p>Każdy wpis w <code>desktops</code> (poza <code>"none"</code>) musi mieć odpowiadający katalog <code>modules/desktop-&lt;id&gt;/package.list</code> z metapakietem tego środowiska — <code>zlb manifest validate</code> to sprawdza przed zbudowaniem ISO. Instalator sam obsługuje siedem języków interfejsu (polski, angielski, niemiecki, francuski, hiszpański, włoski, ukraiński) niezależnie od tego, ile lokalizacji oferuje dana dystrybucja w <code>locales</code>.</p>
+        <p>Plik i pliki brandingu (<code>overlays/branding/</code>) są osadzane w obrazie ISO przez <code>zlb</code> i odczytywane przez instalator w trakcie działania — ten sam mechanizm działa niezależnie od tego, czy instalator jest uruchamiany automatycznie z GRUB-a, ręcznie z sesji live, czy w trybie tekstowym (<code>--server</code>, bez GUI) na maszynie bez środowiska graficznego.</p>
 
         <h2 id="budowanie">Budowanie własnego obrazu</h2>
         <ol>
@@ -94,12 +128,19 @@ package "git" {
         </ol>
         <p>Wynik ląduje w <code>out/</code> — ISO, obraz OCI i sumy sha256, dokładnie jak w oficjalnym CI. Szczegóły na stronie <a href="builder.html">buildera</a>.</p>
 
-        <h2 id="publikacja">Publikacja własnego pakietu</h2>
+        <h2 id="publikacja">Publikacja własnego pakietu (zpk)</h2>
+        <p><code>zpk</code> — builder pakietów <code>.zpk</code> — prowadzi od pomysłu do pull requesta w rejestrze pakietów trzema poleceniami:</p>
+        <ol>
+          <li><strong><code>zpk init</code></strong> — tworzy <code>zpk.build</code> (metadane pakietu w HCL) i przykładowy skrypt budujący.</li>
+          <li><strong><code>zpk build --release</code></strong> — buduje <code>.zpk</code> dla każdej architektury z <code>package.arch</code>, licząc sumy sha256.</li>
+          <li><strong><code>zpk schedule-release</code></strong> — otwiera pull request do <a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a> z nowym albo zaktualizowanym wpisem.</li>
+        </ol>
         <pre><code>zpk init
 $EDITOR zpk.build recipe.janet
 zpk build --release --verbose
 zpk schedule-release --branch=testing</code></pre>
-        <p>Ostatnie polecenie otwiera pull request do <a href="https://github.com/Zenit-Linux/own-repository" target="_blank" rel="noopener">own-repository</a> — stamtąd <code>zpm</code> na każdym systemie zobaczy Twój pakiet po najbliższym <code>zpm refresh</code>.</p>
+        <p>Ostatnie polecenie otwiera pull request — stamtąd <code>zpm</code> na każdym systemie zobaczy Twój pakiet po najbliższym <code>zpm refresh</code>. Format natywny <code>.zpk</code> to podpisany manifest z sumą sha256 archiwum i każdego pliku w środku — <code>zpm install pakiet.zpk</code> weryfikuje integralność przed rozpakowaniem.</p>
+        <p>Wolisz przejść przez to pytanie-po-pytaniu? <code>zpk tutorial-release</code> to interaktywny kreator z wyborem języka (<code>ZPK_LANG=pl</code>).</p>
 
         <h2 id="diagnostyka">Diagnostyka</h2>
         <p>Coś nie zgadza się między tym, co <code>zpm</code> myśli, że zainstalowało, a stanem faktycznym na dysku:</p>
@@ -129,8 +170,8 @@ zpm doctor --fix     # napraw to, co bezpieczne (nigdy nie instaluje/usuwa pakie
       <h4>Narzędzia</h4>
       <ul>
         <li><a href="builder.html">zlb</a></li>
-        <li><a href="packages.html">zpm</a></li>
-        <li><a href="packages.html#zpk">zpk</a></li>
+        <li><a href="docs.html#zpm-podstawy">zpm</a></li>
+        <li><a href="docs.html#publikacja">zpk</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -148,8 +189,8 @@ zpm doctor --fix     # napraw to, co bezpieczne (nigdy nie instaluje/usuwa pakie
   </div>
 </footer>
 
-<script type="text/javascript" src="../scripts/nav.ja"></script>
-<script type="text/javascript" src="../scripts/copy.ja"></script>
+<script type="text/javascript" src="../scripts/nav.js"></script>
+<script type="text/javascript" src="../scripts/copy.js"></script>
 <script type="text/javascript">
   // Podświetlenie aktywnej pozycji w docs-nav podczas scrollowania.
   (function () {
