@@ -1,13 +1,3 @@
-/* scripts/nav.ja — Zenit Linux site
- * Uwaga o rozszerzeniu: plik jest zwykłym JavaScriptem pod niestandardowym
- * rozszerzeniem ".ja" (zgodnie z konwencją tego repo, patrz *.janet w
- * innych projektach Zenit) — dołączony przez <script type="text/javascript"
- * src="...">, więc typ MIME serwera nie ma znaczenia dla wykonania.
- *
- * Odpowiada za: stan headera przy scrollu, menu mobilne (hamburger),
- * podświetlenie aktywnej pozycji nawigacji oraz proste ujawnianie sekcji
- * przy scrollu (elementy z atrybutem [data-reveal]).
- */
 (function () {
   "use strict";
 
