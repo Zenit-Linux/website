@@ -1,11 +1,3 @@
-/* scripts/boot.ja — Zenit Linux site
- * Hero "boot log": symuluje wyjście `zlb build all` budujące obraz Zenit
- * Linux — sygnaturalny element strony ("dystrybucja, która buduje samą
- * siebie"). Czysto dekoracyjne/tekstowe — nic nie jest wykonywane naprawdę,
- * to statyczny skrypt-timeline wypisywany znak-po-znaku do #boot-terminal.
- * Respektuje prefers-reduced-motion: wtedy wypisuje log od razu, bez
- * animacji znak-po-znak.
- */
 (function () {
   "use strict";
 
