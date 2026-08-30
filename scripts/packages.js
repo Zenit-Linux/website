@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var OWN_REPO_URL = "https://raw.githubusercontent.com/Zenit-Linux/zpm/main/custom/own-repository.json";
+  var OWN_REPO_URL = "https://raw.githubusercontent.com/Zenit-Linux/own-repository/main/repo/own-repository.json";
 
   var els = {
     search: document.getElementById("pkg-search"),
