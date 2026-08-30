@@ -104,7 +104,7 @@ package "curl" {}               # backend/wariant domyślny z distro.hcl</code><
         <p>Twórca dystrybucji opartej o Zenit steruje kreatorem instalacji przez <code>installer/config.hcl</code> w korzeniu repozytorium:</p>
         <pre><code>installer {
   desktop_selector = true
-  desktops         = ["gnome", "plasma", "none"]
+  desktops         = ["gnome", "plasma", "xfce", "all", "none"]
   default_desktop  = "gnome"
 
   locales         = ["pl_PL.UTF-8", "en_US.UTF-8", "de_DE.UTF-8"]
@@ -115,7 +115,7 @@ branding {
   icon   = "icon-no-bg.png"   # względem overlays/branding/
   banner = "banner.png"
 }</code></pre>
-        <p>Każdy wpis w <code>desktops</code> (poza <code>"none"</code>) musi mieć odpowiadający katalog <code>modules/desktop-&lt;id&gt;/package.list</code> z metapakietem tego środowiska — <code>zlb manifest validate</code> to sprawdza przed zbudowaniem ISO. Instalator sam obsługuje siedem języków interfejsu (polski, angielski, niemiecki, francuski, hiszpański, włoski, ukraiński) niezależnie od tego, ile lokalizacji oferuje dana dystrybucja w <code>locales</code>.</p>
+        <p>Każdy wpis w <code>desktops</code> (poza <code>"none"</code> i sentinelem <code>"all"</code>) musi mieć odpowiadający katalog <code>modules/desktop-&lt;id&gt;/package.list</code> z metapakietem tego środowiska — <code>zlb manifest validate</code> to sprawdza przed zbudowaniem ISO. <code>"all"</code> włącza dodatkowo pełny, wbudowany katalog instalatora (GNOME, Plasma, Xfce, COSMIC, Budgie, MATE, LXQt, Deepin, Enlightenment i własne środowiska Zenit — ZDE i Blue Environment, oba na razie jako zapowiedzi) — użytkownik może wtedy wybrać dowolne z nich, nie tylko te jawnie wymienione w <code>desktops</code>. Instalator sam obsługuje siedem języków interfejsu (polski, angielski, niemiecki, francuski, hiszpański, włoski, ukraiński) niezależnie od tego, ile lokalizacji oferuje dana dystrybucja w <code>locales</code>.</p>
         <p>Plik i pliki brandingu (<code>overlays/branding/</code>) są osadzane w obrazie ISO przez <code>zlb</code> i odczytywane przez instalator w trakcie działania — ten sam mechanizm działa niezależnie od tego, czy instalator jest uruchamiany automatycznie z GRUB-a, ręcznie z sesji live, czy w trybie tekstowym (<code>--server</code>, bez GUI) na maszynie bez środowiska graficznego.</p>
 
         <h2 id="budowanie">Budowanie własnego obrazu</h2>
